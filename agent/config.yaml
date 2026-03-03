@@ -1,0 +1,16 @@
+agent:
+  flush_interval: 2s
+  batch_size: 500
+  log_level: info
+
+inputs:
+  - type: docker
+    # options:
+    #   log_root: /var/lib/docker/containers   # override for testing
+
+output:
+  endpoint: http://localhost:8080
+  timeout: 5s
+  max_retries: 3
+  compression: true
+
