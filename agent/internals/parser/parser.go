@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"featuretrace.io/agent/internals/input"
 	"featuretrace.io/agent/internals/model"
 )
 
@@ -25,18 +26,18 @@ type dockerLogEntry struct {
 // It first unwraps the Docker JSON envelope, then attempts to parse the inner
 // message as structured JSON (to extract level, trace_id, etc.). If the inner
 // message is plain text it falls back to a simple text record.
-func Parse(raw []byte) model.Record {
+func Parse(raw input.RawLog) model.Record {
 	rec := model.NewRecord()
 
-	raw = bytes.TrimSpace(raw)
-	if len(raw) == 0 {
+	raw.Data = bytes.TrimSpace(raw.Data)
+	if len(raw.Data) == 0 {
 		return rec
 	}
 
 	// --- Step 1: unwrap Docker JSON envelope ---
 	var docker dockerLogEntry
-	if err := json.Unmarshal(raw, &docker); err == nil && docker.Log != "" {
-		raw = []byte(strings.TrimRight(docker.Log, "\n"))
+	if err := json.Unmarshal(raw.Data, &docker); err == nil && docker.Log != "" {
+		raw.Data = []byte(strings.TrimRight(docker.Log, "\n"))
 		rec.Source = docker.Stream
 		if t, tErr := time.Parse(time.RFC3339Nano, docker.Time); tErr == nil {
 			rec.Timestamp = t
@@ -45,14 +46,20 @@ func Parse(raw []byte) model.Record {
 
 	// --- Step 2: try structured JSON inside the log message ---
 	var fields map[string]interface{}
-	if err := json.Unmarshal(raw, &fields); err == nil {
+	if err := json.Unmarshal(raw.Data, &fields); err == nil {
 		rec = applyJSONFields(rec, fields)
 		return rec
 	}
 
 	// --- Step 3: fallback — plain text ---
-	rec.Message = string(raw)
+	rec.Message = string(raw.Data)
 	rec.Level = inferLevel(rec.Message)
+
+	rec.Metadata["container_id"] = raw.ContainerID
+	rec.Metadata["container_name"] = raw.ContainerName
+	// b, _ := json.MarshalIndent(rec, "", "  ")
+	// fmt.Println(string(b))
+
 	return rec
 }
 
@@ -137,4 +144,3 @@ func inferLevel(msg string) string {
 		return "info"
 	}
 }
-

@@ -1,5 +1,10 @@
 # FeatureTrace.io
 
+```go build -o app ./cmd/api/main.go && ./app ```
+
+```go build -o agent ./cmd/agent/main.go && sudo ./agent```
+
+
 ## 1. FeatureTrace Backend
 
 ### 1.1 Project Structure
@@ -30,6 +35,7 @@ app/
 
 
 ## 2. FeatureTrace Agent
+
 
 ### 2.1 Project Structure
 agent/
@@ -63,6 +69,7 @@ agent/
 
 ### 2.2 Flow
 
+
                 ┌─────────────┐
                 │   INPUTS     │
                 │ docker/file  │
@@ -87,3 +94,12 @@ agent/
                 ┌─────────────┐
                 │  EXPORTER    │
                 └─────────────┘
+
+
+
+## Docs
+
+https://dev.to/souvikinator/understanding-goroutines-and-channels-in-golang-with-intuitive-visuals-16gj
+
+
+https://go.dev/blog/pipelines

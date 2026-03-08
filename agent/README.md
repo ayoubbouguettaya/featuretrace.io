@@ -388,7 +388,7 @@ inputs:
   - type: docker
 
 output:
-  endpoint: http://localhost:8080
+  endpoint: http://localhost:3010
 ```
 
 Agents must be config-driven.

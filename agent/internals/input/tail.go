@@ -15,7 +15,7 @@ const (
 
 // tailFile continuously reads new lines appended to a file. It handles
 // truncation (log rotation) by re-seeking to the beginning.
-func tailFile(ctx context.Context, path string, out chan<- []byte) error {
+func tailFile(ctx context.Context, path string, file DiscoverDockerLogsFile, out chan<- RawLog) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return err
@@ -43,7 +43,11 @@ func tailFile(ctx context.Context, path string, out chan<- []byte) error {
 			cpy := make([]byte, len(line))
 			copy(cpy, line)
 			select {
-			case out <- cpy:
+			case out <- RawLog{
+				Data:          cpy,
+				ContainerID:   file.ContainerID,
+				ContainerName: file.ContainerName,
+			}:
 			case <-ctx.Done():
 				return ctx.Err()
 			}
@@ -81,4 +85,3 @@ func tailFile(ctx context.Context, path string, out chan<- []byte) error {
 		}
 	}
 }
-

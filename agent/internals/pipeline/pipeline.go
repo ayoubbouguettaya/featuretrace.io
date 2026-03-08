@@ -17,10 +17,10 @@ import (
 // Channel buffer sizes — large enough to absorb bursts without blocking
 // producers for too long, small enough to bound memory.
 const (
-	rawChanSize     = 4096
-	recordChanSize  = 2048
-	enrichChanSize  = 2048
-	batchChanSize   = 64
+	rawChanSize    = 4096
+	recordChanSize = 2048
+	enrichChanSize = 2048
+	batchChanSize  = 64
 )
 
 // Pipeline wires together every stage of the FeatureTrace Agent:
@@ -94,10 +94,10 @@ func (p *Pipeline) Start() {
 	ctx, cancel := context.WithCancel(context.Background())
 	p.cancel = cancel
 
-	rawChan    := make(chan []byte, rawChanSize)
+	rawChan := make(chan input.RawLog, rawChanSize)
 	recordChan := make(chan model.Record, recordChanSize)
 	enrichChan := make(chan model.Record, enrichChanSize)
-	batchChan  := make(chan []model.Record, batchChanSize)
+	batchChan := make(chan []model.Record, batchChanSize)
 
 	// Stage 1 — Input: tails Docker logs, produces raw bytes
 	p.wg.Add(1)
@@ -181,4 +181,3 @@ func (p *Pipeline) Stop() {
 	p.wg.Wait()
 	log.Println("[pipeline] shutdown complete")
 }
-

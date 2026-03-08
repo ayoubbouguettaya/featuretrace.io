@@ -3,6 +3,8 @@ package enrich
 import (
 	"os"
 	"strings"
+	"encoding/json"
+	"fmt"
 
 	"featuretrace.io/agent/internals/model"
 )
@@ -49,6 +51,9 @@ func (e *Enricher) Enrich(rec *model.Record) {
 	if rec.Service == "" {
 		rec.Service = e.detectService(rec)
 	}
+
+	b, _ := json.MarshalIndent(rec, "", "  ")
+	fmt.Println(string(b))
 
 	// --- Trace correlation (the FeatureTrace secret weapon) ---
 	e.correlate(rec)

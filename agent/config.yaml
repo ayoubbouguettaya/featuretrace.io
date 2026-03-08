@@ -9,7 +9,7 @@ inputs:
     #   log_root: /var/lib/docker/containers   # override for testing
 
 output:
-  endpoint: http://localhost:8080
+  endpoint: http://localhost:3010
   timeout: 5s
   max_retries: 3
   compression: true
