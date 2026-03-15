@@ -97,9 +97,19 @@ agent/
 
 
 
-## Docs
+## Docs:
 
 https://dev.to/souvikinator/understanding-goroutines-and-channels-in-golang-with-intuitive-visuals-16gj
 
 
 https://go.dev/blog/pipelines
+
+
+## Tools:
+
+- grpc: https://pkg.go.dev/google.golang.org/grpc
+
+- Nats: https://docs.nats.io/
+
+- Clickhouse: https://clickhouse.com/docs
+

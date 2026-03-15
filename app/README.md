@@ -110,7 +110,7 @@ NOT:
 
 ❌ parsing heavy logic
 ❌ storage
-❌ indexing
+❌ indexing 
 
 ---
 
