@@ -113,3 +113,7 @@ https://go.dev/blog/pipelines
 
 - Clickhouse: https://clickhouse.com/docs
 
+- https://grpc.io/docs/languages/go/basics/
+
+
+

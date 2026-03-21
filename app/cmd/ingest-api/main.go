@@ -27,7 +27,7 @@ func main() {
 	defer cancel()
 
 	// ── NATS connection ─────────────────────────────────────────────
-	natsConn, err := queue.NewNATSConn(natsURL)
+	natsConn, err := queue.NewNATSConnection(natsURL)
 	if err != nil {
 		log.Fatal("nats: %v", err)
 	}

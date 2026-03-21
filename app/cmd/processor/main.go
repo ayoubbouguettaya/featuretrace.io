@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"syscall"
 
-	chclient "featuretrace.io/app/internals/storage/clickhouse"
 	"featuretrace.io/app/internals/processor"
 	"featuretrace.io/app/internals/queue"
+	clickHouseClient "featuretrace.io/app/internals/storage/clickhouse"
 	"featuretrace.io/app/internals/storage/repository"
 	"featuretrace.io/app/pkg/logger"
 )
@@ -19,46 +19,46 @@ func main() {
 
 	// ── Configuration ───────────────────────────────────────────────
 	natsURL := envOr("NATS_URL", "nats://localhost:4222")
-	chAddr := envOr("CLICKHOUSE_ADDR", "localhost:9000")
-	chDB := envOr("CLICKHOUSE_DB", "featuretrace")
-	chUser := envOr("CLICKHOUSE_USER", "default")
-	chPass := envOr("CLICKHOUSE_PASSWORD", "")
+	clickHouseAddr := envOr("CLICKHOUSE_ADDR", "localhost:9000")
+	clickHouseDB := envOr("CLICKHOUSE_DB", "featuretrace")
+	clickHouseUser := envOr("CLICKHOUSE_USER", "default")
+	clickHousePass := envOr("CLICKHOUSE_PASSWORD", "")
 	batchSize := intEnvOr("BATCH_SIZE", 1000)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// ── ClickHouse ──────────────────────────────────────────────────
-	ch, err := chclient.New(ctx, chclient.Config{
-		Addr:     chAddr,
-		Database: chDB,
-		Username: chUser,
-		Password: chPass,
+	clickHouseInstance, err := clickHouseClient.New(ctx, clickHouseClient.Config{
+		Addr:     clickHouseAddr,
+		Database: clickHouseDB,
+		Username: clickHouseUser,
+		Password: clickHousePass,
 	})
 	if err != nil {
 		log.Fatal("clickhouse: %v", err)
 	}
-	defer ch.Close()
+	defer clickHouseInstance.Close()
 
-	if err := ch.Migrate(ctx, chDB); err != nil {
+	if err := clickHouseInstance.Migrate(ctx, clickHouseDB); err != nil {
 		log.Fatal("migrate: %v", err)
 	}
 
-	repo := repository.NewClickHouseRepo(ch.Conn(), chDB)
+	repo := repository.NewClickHouseRepo(clickHouseInstance.Conn(), clickHouseDB)
 
 	// ── NATS ────────────────────────────────────────────────────────
-	natsConn, err := queue.NewNATSConn(natsURL)
+	natsConnection, err := queue.NewNATSConnection(natsURL)
 	if err != nil {
 		log.Fatal("nats: %v", err)
 	}
-	defer natsConn.Close()
+	defer natsConnection.Close()
 
-	if err := natsConn.EnsureStream(ctx); err != nil {
+	if err := natsConnection.EnsureStream(ctx); err != nil {
 		log.Fatal("ensure stream: %v", err)
 	}
 
 	// ── Worker ──────────────────────────────────────────────────────
-	worker := processor.NewWorker(natsConn, repo, batchSize)
+	worker := processor.NewWorker(natsConnection, repo, batchSize)
 
 	// ── Graceful shutdown ───────────────────────────────────────────
 	go func() {

@@ -20,15 +20,15 @@ const (
 	ConsumerName = "log-processor"
 )
 
-// NATSConn wraps a NATS connection and a JetStream context.
-type NATSConn struct {
+// NATSConnection wraps a NATS connection and a JetStream context.
+type NATSConnection struct {
 	Conn      *nats.Conn
 	JetStream jetstream.JetStream
 	log       *logger.Logger
 }
 
-// NewNATSConn connects to NATS and provisions the JetStream stream.
-func NewNATSConn(url string) (*NATSConn, error) {
+// NewNATSConnection connects to NATS and provisions the JetStream stream.
+func NewNATSConnection(url string) (*NATSConnection, error) {
 	lg := logger.New("nats")
 
 	nc, err := nats.Connect(url,
@@ -54,7 +54,7 @@ func NewNATSConn(url string) (*NATSConn, error) {
 
 	lg.Info("connected to NATS at %s", url)
 
-	return &NATSConn{
+	return &NATSConnection{
 		Conn:      nc,
 		JetStream: js,
 		log:       lg,
@@ -62,7 +62,7 @@ func NewNATSConn(url string) (*NATSConn, error) {
 }
 
 // EnsureStream creates or updates the JetStream stream for log ingestion.
-func (n *NATSConn) EnsureStream(ctx context.Context) error {
+func (n *NATSConnection) EnsureStream(ctx context.Context) error {
 	cfg := jetstream.StreamConfig{
 		Name:      StreamName,
 		Subjects:  []string{"logs.>"},
@@ -81,7 +81,7 @@ func (n *NATSConn) EnsureStream(ctx context.Context) error {
 }
 
 // Close gracefully drains and closes the NATS connection.
-func (n *NATSConn) Close() {
+func (n *NATSConnection) Close() {
 	if n.Conn != nil {
 		n.Conn.Drain()
 	}

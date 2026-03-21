@@ -21,7 +21,7 @@ type Worker struct {
 // NewWorker creates a processor worker wired to a NATS consumer and a
 // ClickHouse repository.
 func NewWorker(
-	natsConn *queue.NATSConn,
+	natsConn *queue.NATSConnection,
 	repo repository.LogRepository,
 	batchSize int,
 ) *Worker {
@@ -70,4 +70,3 @@ func (w *Worker) handle(ctx context.Context, records []model.LogRecord) error {
 	w.log.Debug("handled batch of %d records", len(processed))
 	return nil
 }
-
