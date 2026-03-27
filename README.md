@@ -38,6 +38,7 @@ app/
 
 
 ### 2.1 Project Structure
+```
 agent/
 ├── cmd/agent/
 │   └── main.go
@@ -66,10 +67,10 @@ agent/
 │   │
 │   └── config/
 │       └── config.go
-
+```
 ### 2.2 Flow
 
-
+```
                 ┌─────────────┐
                 │   INPUTS     │
                 │ docker/file  │
@@ -95,7 +96,7 @@ agent/
                 │  EXPORTER    │
                 └─────────────┘
 
-
+```
 
 ## Docs:
 
