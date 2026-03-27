@@ -8,7 +8,7 @@
 ## 1. FeatureTrace Backend
 
 ### 1.1 Project Structure
-
+```
 app/
 ├── cmd/
 │   ├── api/              # ingestion API
@@ -32,7 +32,7 @@ app/
 ├── scripts/
 ├── web/                  # React frontend
 └── go.mod
-
+```
 
 ## 2. FeatureTrace Agent
 
@@ -117,3 +117,6 @@ https://go.dev/blog/pipelines
 
 
 
+https://grpc.io/docs/languages/go/quickstart/
+
+https://grpc.io/docs/languages/go/basics/
