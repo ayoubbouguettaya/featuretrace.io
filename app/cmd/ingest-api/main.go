@@ -13,7 +13,7 @@ import (
 	"featuretrace.io/app/internals/ingestion"
 	"featuretrace.io/app/internals/queue"
 	"featuretrace.io/app/pkg/logger"
-	pb "featuretrace.io/app/proto/v1"
+	pb "featuretrace.io/proto/v1"
 )
 
 func main() {
@@ -38,8 +38,7 @@ func main() {
 	}
 
 	// ── Wire ingestion pipeline ─────────────────────────────────────
-	producer := queue.NewProducer(natsConn.JetStream)
-	enqueuer := ingestion.NewEnqueuer(producer)
+	enqueuer := ingestion.NewEnqueuer(natsConn)
 	handler := ingestion.NewHandler(enqueuer)
 
 	// ── gRPC server ─────────────────────────────────────────────────

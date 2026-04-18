@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	chclient "featuretrace.io/app/internals/storage/clickhouse"
 	"featuretrace.io/app/internals/query"
+	chclient "featuretrace.io/app/internals/storage/clickhouse"
 	"featuretrace.io/app/internals/storage/repository"
 	"featuretrace.io/app/pkg/logger"
 )
@@ -18,7 +18,7 @@ func main() {
 	log := logger.New("query-api")
 
 	// ── Configuration ───────────────────────────────────────────────
-	httpAddr := envOr("HTTP_ADDR", ":8080")
+	httpAddr := envOr("HTTP_ADDR", ":3008")
 	chAddr := envOr("CLICKHOUSE_ADDR", "localhost:9000")
 	chDB := envOr("CLICKHOUSE_DB", "featuretrace")
 	chUser := envOr("CLICKHOUSE_USER", "default")

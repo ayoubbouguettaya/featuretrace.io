@@ -19,14 +19,14 @@ type LogRepository interface {
 
 // LogFilter defines query parameters for the Query API.
 type LogFilter struct {
-	Service   string
-	Level     string
-	Feature   string
-	Search    string // free-text search on message
-	From      time.Time
-	To        time.Time
-	Limit     int
-	Offset    int
+	Service string
+	Level   string
+	Feature string
+	Search  string // free-text search on message
+	From    time.Time
+	To      time.Time
+	Limit   int
+	Offset  int
 }
 
 // ClickHouseRepo implements LogRepository backed by ClickHouse.
@@ -58,6 +58,8 @@ func (r *ClickHouseRepo) InsertBatch(ctx context.Context, records []model.LogRec
 		timestamp, message, level, service, feature,
 		trace_id, span_id, source, container, metadata
 	)`, r.database)
+
+	r.log.Debug("inserting batch of %d records", len(records))
 
 	batch, err := r.conn.PrepareBatch(ctx, query)
 	if err != nil {
@@ -164,4 +166,3 @@ func (r *ClickHouseRepo) Query(ctx context.Context, filter LogFilter) ([]model.L
 
 	return results, nil
 }
-

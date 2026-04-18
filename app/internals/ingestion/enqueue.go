@@ -10,21 +10,23 @@ import (
 
 // Enqueuer publishes validated log records to the NATS queue.
 type Enqueuer struct {
-	producer *queue.Producer
-	log      *logger.Logger
+	queueProducer *queue.Producer
+	log           *logger.Logger
 }
 
 // NewEnqueuer wraps a NATS producer for ingestion use.
-func NewEnqueuer(producer *queue.Producer) *Enqueuer {
+func NewEnqueuer(queueNatsConn *queue.NATSConnection) *Enqueuer {
+
+	queueProducer := queue.NewProducer(queueNatsConn.JetStream)
 	return &Enqueuer{
-		producer: producer,
-		log:      logger.New("enqueue"),
+		queueProducer: queueProducer,
+		log:           logger.New("enqueue"),
 	}
 }
 
 // Enqueue publishes a validated batch of log records to the message queue.
 func (e *Enqueuer) Enqueue(ctx context.Context, records []model.LogRecord) error {
-	if err := e.producer.Publish(ctx, records); err != nil {
+	if err := e.queueProducer.Publish(ctx, records); err != nil {
 		e.log.Error("failed to enqueue %d records: %v", len(records), err)
 		return err
 	}
@@ -32,4 +34,3 @@ func (e *Enqueuer) Enqueue(ctx context.Context, records []model.LogRecord) error
 	e.log.Debug("enqueued %d records", len(records))
 	return nil
 }
-

@@ -112,6 +112,12 @@ func discoverDockerLogs(root string) ([]DiscoverDockerLogsFile, error) {
 			containerDir := filepath.Dir(matchedPath)
 			containerID := filepath.Base(containerDir)
 			containerName := readContainerName(containerDir)
+			log.Printf("[docker-input] containerName: %s", containerName)
+
+			if containerName != "backend" && containerName != "frontend-app" {
+				log.Printf("[docker-input] skipping %s", containerName)
+				continue
+			}
 
 			result = append(result, DiscoverDockerLogsFile{
 				Path:          matchedPath,

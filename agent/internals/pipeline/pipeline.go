@@ -64,8 +64,7 @@ func New(cfg *config.Config) *Pipeline {
 	batcher := buffer.New(cfg.Agent.BatchSize, cfg.Agent.FlushInterval)
 
 	// --- Exporter ---
-	exp := output.NewHTTPExporter(
-		cfg.Output.Endpoint,
+	exp := output.NewGrpcExporter(
 		cfg.Output.Timeout,
 		cfg.Output.MaxRetries,
 		cfg.Output.Compression,

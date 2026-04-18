@@ -9,7 +9,7 @@ import (
 
 	"featuretrace.io/app/internals/model"
 	"featuretrace.io/app/pkg/logger"
-	pb "featuretrace.io/app/proto/v1"
+	pb "featuretrace.io/proto/v1"
 )
 
 // Handler implements the gRPC IngestServiceServer interface.
