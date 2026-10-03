@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -72,31 +73,52 @@ func (d *DockerInput) Start(ctx context.Context, out chan<- RawLog) error {
 	return ctx.Err()
 }
 
+// enabledLabel is the container label that opts a container into log
+// collection, e.g. in docker-compose:
+//
+//	labels:
+//	  - feature-trace.enabled=true
+const enabledLabel = "feature-trace.enabled"
+
 // dockerConfigV2 is the minimal subset of config.v2.json we need.
 type dockerConfigV2 struct {
-	Name string `json:"Name"`
+	Name   string `json:"Name"`
+	Config struct {
+		Labels map[string]string `json:"Labels"`
+	} `json:"Config"`
 }
 
-// readContainerName reads the container name from config.v2.json in the
-// container's directory. The Name field looks like "/redis"; we strip the
-// leading slash. Returns "" on any error.
-func readContainerName(containerDir string) string {
+// readContainerConfig reads config.v2.json in the container's directory.
+// Returns nil on any error.
+func readContainerConfig(containerDir string) *dockerConfigV2 {
 	configPath := filepath.Join(containerDir, "config.v2.json")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Printf("[docker-input] cannot read %s: %v", configPath, err)
-		return ""
+		return nil
 	}
 	var cfg dockerConfigV2
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		log.Printf("[docker-input] cannot parse %s: %v", configPath, err)
-		return ""
+		return nil
 	}
-	return strings.TrimPrefix(cfg.Name, "/")
+	return &cfg
+}
+
+// containerName returns the container name without the leading slash
+// (config.v2.json stores it as "/redis").
+func (c *dockerConfigV2) containerName() string {
+	return strings.TrimPrefix(c.Name, "/")
+}
+
+// traceEnabled reports whether the container has opted in via enabledLabel.
+func (c *dockerConfigV2) traceEnabled() bool {
+	enabled, _ := strconv.ParseBool(c.Config.Labels[enabledLabel])
+	return enabled
 }
 
 // discoverDockerLogs finds all *-json.log files under the Docker container
-// storage directory.
+// storage directory, keeping only containers labelled enabledLabel=true.
 func discoverDockerLogs(root string) ([]DiscoverDockerLogsFile, error) {
 	pattern := filepath.Join(root, "*", "*-json.log")
 	matches, err := filepath.Glob(pattern)
@@ -111,11 +133,14 @@ func discoverDockerLogs(root string) ([]DiscoverDockerLogsFile, error) {
 		if statErr == nil && !info.IsDir() {
 			containerDir := filepath.Dir(matchedPath)
 			containerID := filepath.Base(containerDir)
-			containerName := readContainerName(containerDir)
-			log.Printf("[docker-input] containerName: %s", containerName)
+			cfg := readContainerConfig(containerDir)
+			if cfg == nil {
+				continue
+			}
+			containerName := cfg.containerName()
 
-			if containerName != "backend" && containerName != "frontend-app" {
-				log.Printf("[docker-input] skipping %s", containerName)
+			if !cfg.traceEnabled() {
+				log.Printf("[docker-input] skipping %s (no %s=true label)", containerName, enabledLabel)
 				continue
 			}
 
