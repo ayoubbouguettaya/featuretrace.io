@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"featuretrace.io/agent/internals/buffer"
 	"featuretrace.io/agent/internals/config"
@@ -47,7 +48,15 @@ func New(cfg *config.Config) *Pipeline {
 	for _, ic := range cfg.Inputs {
 		switch ic.Type {
 		case "docker":
-			inp = &input.DockerInput{LogRoot: ic.Options["log_root"]}
+			d := &input.DockerInput{LogRoot: ic.Options["log_root"]}
+			if v := ic.Options["scan_interval"]; v != "" {
+				interval, err := time.ParseDuration(v)
+				if err != nil {
+					log.Printf("[pipeline] invalid docker scan_interval %q, using default: %v", v, err)
+				}
+				d.ScanInterval = interval
+			}
+			inp = d
 		default:
 			log.Printf("[pipeline] unknown input type %q, skipping", ic.Type)
 		}
@@ -65,6 +74,7 @@ func New(cfg *config.Config) *Pipeline {
 
 	// --- Exporter ---
 	exp := output.NewGrpcExporter(
+		cfg.Output.Endpoint,
 		cfg.Output.Timeout,
 		cfg.Output.MaxRetries,
 		cfg.Output.Compression,

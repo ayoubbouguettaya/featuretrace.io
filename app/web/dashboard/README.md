@@ -1,73 +1,28 @@
-# React + TypeScript + Vite
+# FeatureTrace dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Log viewer for FeatureTrace, built with React and Vite. It reads everything from the query API (`/v1/logs`, `/v1/facets`).
 
-Currently, two official plugins are available:
+- **Logs**: newest first, filtered by service, feature, level, message text and time range. Filters are kept in the URL, so a view can be shared.
+- **Live**: refreshes every 2 seconds and briefly highlights new logs.
+- **Trace view** (`?trace_id=…`): every log of one request across services, oldest first, with a waterfall of the spans (one bar per service hop).
+- Click a log to see all of its fields, its metadata and its stack trace. Click a service or feature in the table to filter by it.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Develop
 
-## React Compiler
+Run the query API on the host (`make run-query` in `app/`), then:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev     # http://localhost:5173, proxies /v1 to localhost:3008
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Set `QUERY_API_URL` to proxy to another query API.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Run in Docker
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+nginx serves the build and proxies `/v1` to `QUERY_API_URL`:
+
+```bash
+docker build -t featuretrace/dashboard .
+docker run -p 3009:80 -e QUERY_API_URL=http://query-api:3008 featuretrace/dashboard
 ```

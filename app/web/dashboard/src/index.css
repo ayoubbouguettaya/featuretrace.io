@@ -1,111 +1,176 @@
+/*
+ * Design tokens. Dark values are their own validated steps, not a flip:
+ * the categorical series palette passes the CVD / contrast checks against
+ * --surface in each mode (#ffffff light, #131c2e dark).
+ */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  color-scheme: light;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Brand (header is navy in both modes, matching the logo) */
+  --brand-navy: #141c30;
+  --brand-cyan: #10d8e8;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --page: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #f6f8fb;
+  --surface-3: #eceff5;
+  --border: #e1e6ee;
+  --grid: #e6e9ef;
+  --text: #101827;
+  --text-2: #475467;
+  --muted: #667085;
+  --link: #0b7c88;
+  --focus: #0b7c88;
+  --shadow: 0 6px 20px rgba(16, 24, 39, 0.12);
+
+  --row-error: rgba(208, 59, 59, 0.06);
+  --row-fresh: rgba(16, 216, 232, 0.22);
+
+  /* Status (reserved: never used for services); always shown with a label */
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+  --level-info: #667085;
+  --level-debug: #98a2b3;
+
+  /* Categorical: one per service, fixed order */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+  --series-other: #98a2b3;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --page: #0b111d;
+    --surface: #131c2e;
+    --surface-2: #182236;
+    --surface-3: #1f2a41;
+    --border: #26324a;
+    --grid: #222d43;
+    --text: #edf1f7;
+    --text-2: #b6c0ce;
+    --muted: #8a97ab;
+    --link: #3ee0ee;
+    --focus: #3ee0ee;
+    --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    --row-error: rgba(208, 59, 59, 0.13);
+    --row-fresh: rgba(16, 216, 232, 0.16);
+    --level-info: #8a97ab;
+    --level-debug: #5d6a80;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --series-other: #6b778c;
   }
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #0b111d;
+  --surface: #131c2e;
+  --surface-2: #182236;
+  --surface-3: #1f2a41;
+  --border: #26324a;
+  --grid: #222d43;
+  --text: #edf1f7;
+  --text-2: #b6c0ce;
+  --muted: #8a97ab;
+  --link: #3ee0ee;
+  --focus: #3ee0ee;
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --row-error: rgba(208, 59, 59, 0.13);
+  --row-fresh: rgba(16, 216, 232, 0.16);
+  --level-info: #8a97ab;
+  --level-debug: #5d6a80;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --series-other: #6b778c;
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  min-height: 100vh;
+  background: var(--page);
+  color: var(--text);
+  font: 14px/1.5 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
+h2,
 p {
   margin: 0;
 }
 
 code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+pre {
+  font-family: var(--font-mono);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

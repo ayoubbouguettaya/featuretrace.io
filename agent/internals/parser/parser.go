@@ -34,6 +34,11 @@ func Parse(raw input.RawLog) model.Record {
 		return rec
 	}
 
+	// Container identity applies to JSON and plain-text logs alike.
+	rec.Container = raw.ContainerName
+	rec.Metadata["container_id"] = raw.ContainerID
+	rec.Metadata["container_name"] = raw.ContainerName
+
 	// --- Step 1: unwrap Docker JSON envelope ---
 	var docker dockerLogEntry
 	if err := json.Unmarshal(raw.Data, &docker); err == nil && docker.Log != "" {
@@ -55,8 +60,6 @@ func Parse(raw input.RawLog) model.Record {
 	rec.Message = string(raw.Data)
 	rec.Level = inferLevel(rec.Message)
 
-	rec.Metadata["container_id"] = raw.ContainerID
-	rec.Metadata["container_name"] = raw.ContainerName
 	// b, _ := json.MarshalIndent(rec, "", "  ")
 	// fmt.Println(string(b))
 

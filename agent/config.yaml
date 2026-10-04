@@ -5,11 +5,13 @@ agent:
 
 inputs:
   - type: docker
+    # Only containers labelled feature-trace.enabled=true are tailed.
     # options:
     #   log_root: /var/lib/docker/containers   # override for testing
+    #   scan_interval: 5s                      # how often to look for new/removed containers
 
 output:
-  endpoint: http://localhost:3010
+  endpoint: localhost:50051   # gRPC ingest API (host:port)
   timeout: 5s
   max_retries: 3
   compression: true

@@ -13,22 +13,27 @@ const (
 	tailPollInterval = 250 * time.Millisecond
 )
 
-// tailFile continuously reads new lines appended to a file. It handles
-// truncation (log rotation) by re-seeking to the beginning.
-func tailFile(ctx context.Context, path string, file DiscoverDockerLogsFile, out chan<- RawLog) error {
+// tailFile continuously reads new lines appended to a file. It follows both
+// kinds of Docker log rotation: renaming the file away and creating a new
+// one (max-file > 1), and truncating it in place (max-file = 1).
+// Unless fromStart is set, it starts at the end of the file.
+func tailFile(ctx context.Context, path string, file DiscoverDockerLogsFile, out chan<- RawLog, fromStart bool) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { f.Close() }()
 
 	// Seek to end — we only want new data
-	if _, err := f.Seek(0, io.SeekEnd); err != nil {
-		return err
+	if !fromStart {
+		if _, err := f.Seek(0, io.SeekEnd); err != nil {
+			return err
+		}
 	}
 
 	reader := bufio.NewReader(f)
 	var lastSize int64
+	renamed := false // path now names a new file; switch once f is drained
 
 	for {
 		select {
@@ -59,9 +64,33 @@ func tailFile(ctx context.Context, path string, file DiscoverDockerLogsFile, out
 			return err
 		}
 
-		// EOF — check for truncation (log rotation)
+		// EOF on a renamed file: Docker no longer writes to it, so everything
+		// has been read — continue with the new file from its start.
+		if renamed {
+			next, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			log.Printf("[tail] detected rotation on %s, reopening", path)
+			f.Close()
+			f = next
+			reader.Reset(f)
+			lastSize = 0
+			renamed = false
+			continue
+		}
+
+		// EOF — check for rotation
 		info, statErr := f.Stat()
 		if statErr == nil {
+			// Renamed: read whatever is left in the old file first. A missing
+			// path means Docker has not created the new file yet.
+			if pathInfo, err := os.Stat(path); err == nil && !os.SameFile(info, pathInfo) {
+				renamed = true
+				continue
+			}
+
+			// Truncated in place
 			currentSize := info.Size()
 			if currentSize < lastSize {
 				// File was truncated — seek to beginning

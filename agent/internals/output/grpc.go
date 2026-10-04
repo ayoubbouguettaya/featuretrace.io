@@ -20,9 +20,9 @@ type GrpcExporter struct {
 	ClientConn   *grpc.ClientConn
 }
 
-func NewGrpcExporter(timeout time.Duration, maxRetries int, compression bool) *GrpcExporter {
-	addr := "localhost:50051"
-
+// NewGrpcExporter creates an exporter targeting the ingest API at addr
+// (host:port, e.g. "localhost:50051").
+func NewGrpcExporter(addr string, timeout time.Duration, maxRetries int, compression bool) *GrpcExporter {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)

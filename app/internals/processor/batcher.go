@@ -66,13 +66,15 @@ func (b *Batcher) Add(ctx context.Context, records []model.LogRecord) error {
 // Flush sends the buffered records to the flush function and resets the buffer.
 func (b *Batcher) Flush(ctx context.Context) error {
 	b.mu.Lock()
+	// Re-arm even when empty: the timer is one-shot, so skipping this would
+	// stop interval flushes for good after the first idle tick.
+	b.resetTimer()
 	if len(b.buf) == 0 {
 		b.mu.Unlock()
 		return nil
 	}
 	batch := b.buf
 	b.buf = make([]model.LogRecord, 0, b.maxSize)
-	b.resetTimer()
 	b.mu.Unlock()
 
 	b.log.Info("flushing batch of %d records", len(batch))
@@ -92,7 +94,7 @@ func (b *Batcher) resetTimer() {
 
 // Stop flushes remaining records and stops the timer.
 func (b *Batcher) Stop(ctx context.Context) {
-	b.timer.Stop()
 	_ = b.Flush(ctx)
+	b.timer.Stop()
 }
 

@@ -27,6 +27,7 @@ func NewHandler(svc *Service) *Handler {
 // RegisterRoutes registers all Query API routes on the given mux.
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/logs", h.SearchLogs)
+	mux.HandleFunc("GET /v1/facets", h.Facets)
 	mux.HandleFunc("GET /health", h.Health)
 }
 
@@ -34,7 +35,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 //
 // Query params:
 //
-//	service, level, feature, search (free-text),
+//	service, level, feature, trace_id, span_id, search (free-text),
 //	from, to (RFC3339), limit, offset.
 func (h *Handler) SearchLogs(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
@@ -43,6 +44,8 @@ func (h *Handler) SearchLogs(w http.ResponseWriter, r *http.Request) {
 		Service: q.Get("service"),
 		Level:   q.Get("level"),
 		Feature: q.Get("feature"),
+		TraceID: q.Get("trace_id"),
+		SpanID:  q.Get("span_id"),
 		Search:  q.Get("search"),
 		Limit:   intParam(q.Get("limit"), 100),
 		Offset:  intParam(q.Get("offset"), 0),
@@ -71,6 +74,22 @@ func (h *Handler) SearchLogs(w http.ResponseWriter, r *http.Request) {
 		"count":   len(records),
 		"records": records,
 	}); err != nil {
+		h.log.Error("encode response: %v", err)
+	}
+}
+
+// Facets handles GET /v1/facets: the distinct services and features stored,
+// used to populate filter dropdowns.
+func (h *Handler) Facets(w http.ResponseWriter, r *http.Request) {
+	facets, err := h.svc.Facets(r.Context())
+	if err != nil {
+		h.log.Error("facets error: %v", err)
+		http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(facets); err != nil {
 		h.log.Error("encode response: %v", err)
 	}
 }

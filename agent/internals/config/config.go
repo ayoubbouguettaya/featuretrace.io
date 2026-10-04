@@ -48,7 +48,7 @@ func DefaultConfig() *Config {
 			{Type: "docker"},
 		},
 		Output: OutputConfig{
-			Endpoint:    "http://localhost:3010",
+			Endpoint:    "localhost:50051",
 			Timeout:     5 * time.Second,
 			MaxRetries:  3,
 			Compression: true,

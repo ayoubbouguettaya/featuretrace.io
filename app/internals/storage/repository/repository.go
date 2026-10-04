@@ -15,6 +15,7 @@ import (
 type LogRepository interface {
 	InsertBatch(ctx context.Context, records []model.LogRecord) error
 	Query(ctx context.Context, filter LogFilter) ([]model.LogRecord, error)
+	Facets(ctx context.Context) (Facets, error)
 }
 
 // LogFilter defines query parameters for the Query API.
@@ -22,6 +23,8 @@ type LogFilter struct {
 	Service string
 	Level   string
 	Feature string
+	TraceID string
+	SpanID  string
 	Search  string // free-text search on message
 	From    time.Time
 	To      time.Time
@@ -122,6 +125,14 @@ func (r *ClickHouseRepo) Query(ctx context.Context, filter LogFilter) ([]model.L
 		q += " AND feature = ?"
 		args = append(args, filter.Feature)
 	}
+	if filter.TraceID != "" {
+		q += " AND trace_id = ?"
+		args = append(args, filter.TraceID)
+	}
+	if filter.SpanID != "" {
+		q += " AND span_id = ?"
+		args = append(args, filter.SpanID)
+	}
 	if filter.Search != "" {
 		q += " AND message ILIKE ?"
 		args = append(args, "%"+filter.Search+"%")
@@ -165,4 +176,51 @@ func (r *ClickHouseRepo) Query(ctx context.Context, filter LogFilter) ([]model.L
 	}
 
 	return results, nil
+}
+
+// Facets lists the distinct values the Query API can filter on.
+type Facets struct {
+	Services []string `json:"services"`
+	Features []string `json:"features"`
+}
+
+// facetLimit caps each facet list; enough for a dropdown.
+const facetLimit = 200
+
+// Facets returns the distinct non-empty services and features in storage.
+func (r *ClickHouseRepo) Facets(ctx context.Context) (Facets, error) {
+	services, err := r.distinct(ctx, "service")
+	if err != nil {
+		return Facets{}, err
+	}
+	features, err := r.distinct(ctx, "feature")
+	if err != nil {
+		return Facets{}, err
+	}
+	return Facets{Services: services, Features: features}, nil
+}
+
+// distinct returns the sorted distinct non-empty values of column.
+// column is always a constant from this package, never user input.
+func (r *ClickHouseRepo) distinct(ctx context.Context, column string) ([]string, error) {
+	q := fmt.Sprintf(
+		"SELECT DISTINCT %[1]s FROM %[2]s.logs WHERE %[1]s != '' ORDER BY %[1]s LIMIT %[3]d",
+		column, r.database, facetLimit,
+	)
+
+	rows, err := r.conn.Query(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("query distinct %s: %w", column, err)
+	}
+	defer rows.Close()
+
+	values := make([]string, 0)
+	for rows.Next() {
+		var v string
+		if err := rows.Scan(&v); err != nil {
+			return nil, fmt.Errorf("scan %s: %w", column, err)
+		}
+		values = append(values, v)
+	}
+	return values, rows.Err()
 }

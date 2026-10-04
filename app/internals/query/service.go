@@ -34,3 +34,13 @@ func (s *Service) Search(ctx context.Context, filter repository.LogFilter) ([]mo
 	return records, nil
 }
 
+
+// Facets returns the distinct services and features available to filter on.
+func (s *Service) Facets(ctx context.Context) (repository.Facets, error) {
+	facets, err := s.repo.Facets(ctx)
+	if err != nil {
+		s.log.Error("facets failed: %v", err)
+		return repository.Facets{}, err
+	}
+	return facets, nil
+}
